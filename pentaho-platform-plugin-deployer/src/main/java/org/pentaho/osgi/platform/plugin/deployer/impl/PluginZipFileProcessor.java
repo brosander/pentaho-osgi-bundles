@@ -23,6 +23,7 @@
 package org.pentaho.osgi.platform.plugin.deployer.impl;
 
 import com.google.common.io.Files;
+import org.apache.cxf.helpers.FileUtils;
 import org.apache.cxf.helpers.XMLUtils;
 import org.pentaho.osgi.platform.plugin.deployer.api.PluginFileHandler;
 import org.pentaho.osgi.platform.plugin.deployer.api.PluginHandlingException;
@@ -86,7 +87,7 @@ public class PluginZipFileProcessor {
     File dir = Files.createTempDir();
     PluginMetadata pluginMetadata = null;
     try {
-      pluginMetadata = new PluginMetadataImpl();
+      pluginMetadata = new PluginMetadataImpl( dir );
     } catch ( ParserConfigurationException e ) {
       throw new IOException( e );
     }
@@ -115,27 +116,18 @@ public class PluginZipFileProcessor {
           } catch ( Exception e ) {
             throw new IOException( e );
           }
-        } else if ( pluginFileHandlers != null ) {
-          for ( PluginFileHandler pluginFileHandler : pluginFileHandlers ) {
-            if ( pluginFileHandler.handles( name ) ) {
-              try {
-                pluginFileHandler.handle( name, zipBytes, pluginMetadata );
-              } catch ( PluginHandlingException e ) {
-                throw new IOException( e );
-              }
-            }
-          }
         }
         if ( shouldOutput ) {
           File outFile = new File( dir.getAbsolutePath() + "/" + zipEntry.getName() );
           int tries = 100;
-          while ( !outFile.getParentFile().mkdirs() && tries > 0 ) {
-            tries--;
+          File outParent = outFile.getParentFile();
+          while ( !outParent.exists() && tries-- > 0 ) {
+            outParent.mkdirs();
           }
           if ( zipEntry.isDirectory() ) {
             tries = 100;
-            while ( !outFile.mkdir() && tries > 0 ) {
-              tries--;
+            while ( !outFile.exists() && tries-- > 0 ) {
+              outFile.mkdir();
             }
           } else {
             FileOutputStream fileOutputStream = null;
@@ -149,16 +141,54 @@ public class PluginZipFileProcessor {
               }
             }
           }
-          /*ZipEntry outEntry = new ZipEntry( zipEntry );
-          zipOutputStream.putNextEntry( outEntry );
-          zipOutputStream.write( zipBytes );
-          zipOutputStream.closeEntry();*/
         }
       }
+
+      if ( pluginFileHandlers != null ) {
+        Stack<File> fileStack = new Stack<File>();
+        fileStack.push( dir );
+        while ( fileStack.size() > 0 ) {
+          File currentFile = fileStack.pop();
+          File searchFile = currentFile;
+          Stack<String> dirStack = new Stack<String>();
+          while ( !searchFile.equals( dir ) ) {
+            dirStack.push( searchFile.getName() );
+            searchFile = searchFile.getParentFile();
+          }
+          String currentFileName = null;
+          StringBuilder sb = new StringBuilder();
+          while ( dirStack.size() > 0 ) {
+            sb.append( dirStack.pop() );
+            sb.append( "/" );
+          }
+          if ( sb.length() > 0 ) {
+            sb.setLength( sb.length() - 1 );
+          }
+          String currentPath = sb.toString();
+          for ( PluginFileHandler pluginFileHandler : pluginFileHandlers ) {
+            if ( pluginFileHandler.handles( currentPath ) ) {
+              try {
+                pluginFileHandler.handle( currentPath, currentFile, pluginMetadata );
+              } catch ( PluginHandlingException e ) {
+                throw new IOException( e );
+              }
+            }
+          }
+
+          if ( currentFile.isDirectory() ) {
+            File[] dirFiles = currentFile.listFiles();
+            for ( File file : dirFiles ) {
+              fileStack.push( file );
+            }
+          }
+        }
+      }
+
       int tries = 100;
-      File blueprintDir = new File( dir.getAbsolutePath() + "/" + BLUEPRINT.substring( 0, BLUEPRINT.lastIndexOf( '/' ) ) );
-      while ( !blueprintDir.mkdirs() && tries > 0 ) {
-        tries--;
+      File blueprintDir =
+        new File( dir.getAbsolutePath() + "/" + BLUEPRINT.substring( 0, BLUEPRINT.lastIndexOf( '/' ) ) );
+      while ( !blueprintDir.exists() && tries-- > 0 ) {
+        blueprintDir.mkdirs();
       }
       FileOutputStream blueprintOutputStream = null;
       try {
@@ -238,7 +268,16 @@ public class PluginZipFileProcessor {
       } catch ( IOException e ) {
         // Noop
       }
+
     }
+  }
+  private void recursiveDelete( File file ) {
+    if ( file.isDirectory() ) {
+      for ( File child : file.listFiles() ) {
+        recursiveDelete( child );
+      }
+    }
+    FileUtils.delete( file );
   }
 }
 
