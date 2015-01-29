@@ -15,18 +15,18 @@
 
   <cm:property-placeholder persistent-id="org.pentaho.requirejs" update-strategy="reload">
     <cm:default-properties>
-      <cm:property name="context.root" value="/"/>
+      <cm:property name="alias" value="/requirejs-manager/js/require-init.js"/>
     </cm:default-properties>
   </cm:property-placeholder>
 
   <bean id="configManager" class="org.pentaho.js.require.RequireJsConfigManager" scope="singleton" init-method="init">
     <property name="bundleContext" ref="blueprintBundleContext"/>
-    <property name="contextRoot" value="${context.root}"/>
+    <property name="alias" value="${alias}"/>
   </bean>
 
   <service interface="javax.servlet.http.HttpServlet">
     <service-properties>
-      <entry key="alias" value="/requirejs-manager/js/require-init.js"/>
+      <entry key="alias" value="${alias}"/>
     </service-properties>
     <bean class="org.pentaho.js.require.RequireJsConfigServlet">
       <property name="manager" ref="configManager"/>

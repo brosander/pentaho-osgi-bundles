@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.URL;
 
 /**
  * Created by bryan on 8/5/14.
@@ -87,13 +88,30 @@ public class RequireJsConfigServlet extends HttpServlet {
     try {
       printWriter.write( requireJs );
       printWriter.write( "\nif(typeof CONTEXT_PATH == 'undefined'){\n" );
-      printWriter.write( "\twindow.CONTEXT_PATH = '/';\n" );
+      printWriter.write( "\twindow.CONTEXT_PATH = '';\n" );
       printWriter.write( "}\n" );
       printWriter.write( "\nrequireCfg = " );
       printWriter.write( manager.getRequireJsConfig() );
       printWriter.write( "\n" );
+      printWriter.write( "\n// Determine base url by difference between alias given in blueprint and url the client sees" );
+      printWriter.write( "requireCfg.baseUrl = function() {\n");
+      printWriter.write( "\tvar getPath = function(url) {\n");
+      printWriter.write( "\t\tvar link = document.createElement('a');\n");
+      printWriter.write( "\t\tlink.href = url;\n");
+      printWriter.write( "\t\treturn link.pathname;\n");
+      printWriter.write( "\t}\n");
+      printWriter.write( "\tvar scripts = document.getElementsByTagName('script');\n");
+      printWriter.write( "\tvar requirePath = '" + manager.getAlias() + "';\n" );
+      printWriter.write( "\tfor (var i = 0; i < scripts.length; i++) {\n");
+      printWriter.write( "\t\tvar src = scripts[i].src;\n");
+      printWriter.write( "\t\tvar index = scripts[i].src.indexOf(requirePath);\n");
+      printWriter.write( "\t\tif(index > 0) {\n");
+      printWriter.write( "\t\t\treturn getPath(src.substring(0, index));\n");
+      printWriter.write( "\t\t}\n");
+      printWriter.write( "\t}\n");
+      printWriter.write( "\treturn '/';\n");
+      printWriter.write( "}();\n");
       String config = req.getParameter( "config" );
-      printWriter.write( "requireCfg.baseUrl = '" + manager.getContextRoot() + "';\n" );
       if ( config == null || Boolean.valueOf( config ) ) {
         printWriter.write( "require.config(requireCfg);" );
       }

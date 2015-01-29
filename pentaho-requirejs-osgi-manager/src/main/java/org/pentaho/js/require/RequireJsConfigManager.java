@@ -58,7 +58,7 @@ public class RequireJsConfigManager {
   private ExecutorService executorService = Executors.newCachedThreadPool();
   private volatile Future<String> cache;
   private volatile long lastModified;
-  private String contextRoot = "/";
+  private String alias;
 
   public BundleContext getBundleContext() {
     return bundleContext;
@@ -217,14 +217,11 @@ public class RequireJsConfigManager {
     invalidateCache( true );
   }
 
-  public String getContextRoot() {
-    return this.contextRoot;
+  public String getAlias() {
+    return alias;
   }
 
-  public void setContextRoot( String contextRoot ) {
-    // ensure that the given string is properly bounded with slashes
-    contextRoot = ( contextRoot.startsWith( "/" ) == false ) ? "/" + contextRoot : contextRoot;
-    contextRoot = ( contextRoot.endsWith( "/" ) == false ) ? contextRoot + "/" : contextRoot;
-    this.contextRoot = contextRoot;
+  public void setAlias( String alias ) {
+    this.alias = alias;
   }
 }
