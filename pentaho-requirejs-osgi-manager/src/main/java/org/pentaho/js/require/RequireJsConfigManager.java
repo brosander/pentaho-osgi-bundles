@@ -222,6 +222,7 @@ public class RequireJsConfigManager {
   }
 
   public void setAlias( String alias ) {
+    alias = ( alias.startsWith( "/" ) == false ) ? "/" + alias : alias;
     this.alias = alias;
   }
 }

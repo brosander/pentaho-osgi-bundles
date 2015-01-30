@@ -93,7 +93,7 @@ public class RequireJsConfigServlet extends HttpServlet {
       printWriter.write( "\nrequireCfg = " );
       printWriter.write( manager.getRequireJsConfig() );
       printWriter.write( "\n" );
-      printWriter.write( "\n// Determine base url by difference between alias given in blueprint and url the client sees" );
+      printWriter.write( "\n// Determine base url by difference between alias given in blueprint and url the client sees\n" );
       printWriter.write( "requireCfg.baseUrl = function() {\n");
       printWriter.write( "\tvar getPath = function(url) {\n");
       printWriter.write( "\t\tvar link = document.createElement('a');\n");

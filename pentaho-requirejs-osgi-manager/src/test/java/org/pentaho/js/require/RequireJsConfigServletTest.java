@@ -121,7 +121,7 @@ public class RequireJsConfigServletTest {
 
 
   @Test
-  public void testSetContextRoot() throws ServletException, IOException {
+  public void testSetAlias() throws ServletException, IOException {
 
     HttpServletRequest request = mock( HttpServletRequest.class );
     when( request.getParameter( "config" ) ).thenReturn( "false" );
@@ -134,11 +134,11 @@ public class RequireJsConfigServletTest {
     } );
     String testConfig = "TEST_CONFIG";
     when( requireJsConfigManager.getRequireJsConfig() ).thenReturn( testConfig );
-    when( requireJsConfigManager.getContextRoot() ).thenReturn("/test/root/");
+    when( requireJsConfigManager.getAlias() ).thenReturn("/test/root");
 
     requireJsConfigServlet.doGet( request, response );
     String output = outputStream.toString( "UTF-8" );
-    assertTrue( output.contains( "requireCfg.baseUrl = '/test/root/" ) );
+    assertTrue( output.contains( "var requirePath = '/test/root'" ) );
 
   }
 }

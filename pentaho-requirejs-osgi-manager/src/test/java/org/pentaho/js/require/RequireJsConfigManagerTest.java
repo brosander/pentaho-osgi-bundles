@@ -158,11 +158,11 @@ public class RequireJsConfigManagerTest {
 
 
   @Test
-  public void testContextRoot() throws IOException, ParseException {
-    String[] contextPermutations = new String[] { "fake/root", "/fake/root", "fake/root/" };
+  public void testAlias() throws IOException, ParseException {
+    String[] contextPermutations = new String[] { "fake/root", "/fake/root" };
     for ( String contextPermutation : contextPermutations ) {
-      requireJsConfigManager.setContextRoot( contextPermutation );
-      assertEquals( "/fake/root/", requireJsConfigManager.getContextRoot() );
+      requireJsConfigManager.setAlias( contextPermutation );
+      assertEquals( "/fake/root", requireJsConfigManager.getAlias() );
     }
   }
 
